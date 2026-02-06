@@ -30,7 +30,7 @@ function addToHistory(item: TransactionHistoryItem): void {
   try {
     const history = getHistory();
     const filtered = history.filter(h => h.digest !== item.digest);
-    const updated = [item, ...filtered].slice(0, 15);
+    const updated = [item, ...filtered].slice(0, 50);
     localStorage.setItem('transactionHistory', JSON.stringify(updated));
   } catch {
     // Storage full, ignore

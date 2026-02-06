@@ -14,9 +14,17 @@ export async function GET(
     const searchParams = request.nextUrl.searchParams;
     const explainParam = searchParams.get('explain');
 
+    // DEBUG: Log Gemini configuration
+    const geminiApiKey = process.env.GEMINI_API_KEY;
+    console.log('[GEMINI DEBUG] GEMINI_API_KEY present:', !!geminiApiKey);
+    console.log('[GEMINI DEBUG] GEMINI_API_KEY (first 10 chars):', geminiApiKey ? geminiApiKey.substring(0, 10) + '...' : 'NOT SET');
+
     const geminiConfigured = isGeminiConfigured();
+    console.log('[GEMINI DEBUG] isGeminiConfigured():', geminiConfigured);
+
     const explainMode = explainParam ? (explainParam as 'enhanced' | 'simple' | 'none')
         : (geminiConfigured ? 'enhanced' : 'none');
+    console.log('[GEMINI DEBUG] explainMode:', explainMode);
 
     if (!digest || digest.trim() === '') {
         return NextResponse.json(
@@ -27,15 +35,28 @@ export async function GET(
 
     try {
         const transaction = await getTransaction(digest);
+        console.log('[GEMINI DEBUG] Transaction fetched successfully, digest:', transaction.digest);
 
         let llmExplanation: LLMExplainResponse | null = null;
 
         if (explainMode !== 'none' && geminiConfigured) {
+            console.log('[GEMINI DEBUG] Calling getEnhancedExplanation...');
             try {
                 llmExplanation = await getEnhancedExplanation(transaction);
-            } catch {
-                // Silently fail - explanation is optional
+                console.log('[GEMINI DEBUG] getEnhancedExplanation result:', {
+                    success: llmExplanation.success,
+                    error: llmExplanation.error,
+                    hasExplanation: !!llmExplanation.explanation,
+                    model: llmExplanation.model,
+                });
+                if (llmExplanation.explanation) {
+                    console.log('[GEMINI DEBUG] Explanation overview:', JSON.stringify(llmExplanation.explanation.overview, null, 2));
+                }
+            } catch (err) {
+                console.error('[GEMINI DEBUG] Exception in getEnhancedExplanation:', err);
             }
+        } else {
+            console.log('[GEMINI DEBUG] Skipping Gemini explanation - mode:', explainMode, 'configured:', geminiConfigured);
         }
 
         const enhancedTransaction = { ...transaction };

@@ -38,6 +38,42 @@ interface GeminiExplanationDisplayProps {
 export function GeminiExplanationDisplay({ explanation, geminiInfo }: GeminiExplanationDisplayProps) {
     const [expandedLevel, setExpandedLevel] = useState<1 | 2 | 3 | null>(1);
     
+    // Always show the component if geminiInfo is present (even if not configured)
+    if (!geminiInfo && !explanation) {
+        return null;
+    }
+
+    // Show "not configured" message when Gemini is not set up
+    if (geminiInfo && !geminiInfo.configured) {
+        return (
+            <Card className="overflow-hidden">
+                <CardHeader className="bg-gradient-to-r from-yellow-50 to-amber-50">
+                    <CardTitle className="flex items-center gap-2">
+                        <Brain className="h-5 w-5 text-yellow-600" />
+                        AI-Powered Explanation
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                    <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <div className="flex items-start gap-3">
+                            <Info className="h-5 w-5 text-yellow-600 mt-0.5" />
+                            <div>
+                                <p className="font-medium text-yellow-800">AI Explanations Not Configured</p>
+                                <p className="text-sm text-yellow-700 mt-1">
+                                    To enable AI-powered explanations, set the <code>GEMINI_API_KEY</code> environment variable.
+                                </p>
+                                <p className="text-xs text-yellow-600 mt-2">
+                                    The application will continue to work with basic transaction information.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+        );
+    }
+
+    // Don't show anything if there's no explanation but Gemini is configured
     if (!explanation) {
         return null;
     }
@@ -48,18 +84,6 @@ export function GeminiExplanationDisplay({ explanation, geminiInfo }: GeminiExpl
 
     return (
         <div className="space-y-6">
-            {/* Gemini Info Banner */}
-            {geminiInfo && !geminiInfo.configured && (
-                <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <div className="flex items-center gap-2 text-yellow-700">
-                        <Info className="h-5 w-5" />
-                        <p className="text-sm">
-                            AI explanations require a Gemini API key. Set GEMINI_API_KEY in your environment variables.
-                        </p>
-                    </div>
-                </div>
-            )}
-
             {/* 3-Tier Explanation Levels */}
             <Card className="overflow-hidden">
                 <CardHeader className="bg-gradient-to-r from-indigo-50 to-purple-50">
